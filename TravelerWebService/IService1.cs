@@ -30,6 +30,15 @@ namespace TravelerWebService
         [OperationContract]
         string Login(string Email, string Password);
 
+        [OperationContract]
+        List<Countries> GetCountries();
+
+        [OperationContract]
+        List<States> GetStates(string name);
+
+        [OperationContract]
+        List<Cities> GetCities(string name);
+
         // TODO: Add your service operations here
     }
   

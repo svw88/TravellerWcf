@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Globalization;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.ServiceModel;
@@ -14,7 +15,7 @@ namespace TravelerWebService
     // NOTE: In order to launch WCF Test Client for testing this service, please select Service1.svc or Service1.svc.cs at the Solution Explorer and start debugging.
     public class Service1 : IService1
     {
-        string conn = @"Data Source = Database; Initial Catalog = Traveler;Integrated Security = SSPI";
+        string conn = @"Data Source = DESKTOP-8BA0SS9; Initial Catalog = Traveler;Integrated Security = SSPI";
         [WebInvoke(Method = "GET",
                     ResponseFormat = WebMessageFormat.Json,
                     UriTemplate = "events/{Country}/{State}/{City}")]
@@ -24,10 +25,10 @@ namespace TravelerWebService
             {
                 using (SqlConnection SqlConn = new SqlConnection(conn))
                 {
-                    SqlCommand sqlCmd = new SqlCommand("Select * From Events", SqlConn);
-                    sqlCmd.Parameters.Add("@country", SqlDbType.NVarChar,50).Value = "";
-                    sqlCmd.Parameters.Add("@state", SqlDbType.NVarChar).Value = "";
-                    sqlCmd.Parameters.Add("@city", SqlDbType.NVarChar).Value = "";
+                    SqlCommand sqlCmd = new SqlCommand("Select * From Events Where Country = @country AND State = @state AND City = @city order by Date", SqlConn);
+                    sqlCmd.Parameters.Add("@country", SqlDbType.NVarChar,50).Value = Country;
+                    sqlCmd.Parameters.Add("@state", SqlDbType.NVarChar).Value = State;
+                    sqlCmd.Parameters.Add("@city", SqlDbType.NVarChar).Value = City;
                     DataSet ds = new DataSet();
                     using (SqlDataAdapter da = new SqlDataAdapter(sqlCmd))
                     {
@@ -54,8 +55,9 @@ namespace TravelerWebService
                             tempEvent.Image = Convert.ToBase64String((byte[])row[9]);
                             tempEvent.Date = (DateTime)row[10];
                             tempEvent.Price = (decimal)row[11];
+                            tempEvent.Currency = (string)row[12];
 
-                            temp.Add(tempEvent);
+                        temp.Add(tempEvent);
                         }
                     
 
@@ -77,7 +79,7 @@ namespace TravelerWebService
             {
                 using (SqlConnection SqlConn = new SqlConnection(conn))
                 {
-                    SqlCommand sqlCmd = new SqlCommand("Select * From Events WHERE UserId = @userId", SqlConn);
+                    SqlCommand sqlCmd = new SqlCommand("Select * From Events WHERE UserId = @userId order by Date", SqlConn);
                     sqlCmd.Parameters.Add("@userId", SqlDbType.UniqueIdentifier).Value = Guid.Parse(userId);
                     DataSet ds = new DataSet();
                     using (SqlDataAdapter da = new SqlDataAdapter(sqlCmd))
@@ -105,6 +107,7 @@ namespace TravelerWebService
                         tempEvent.Image = Convert.ToBase64String((byte[])row[9]);
                         tempEvent.Date = (DateTime)row[10];
                         tempEvent.Price = (decimal)row[11];
+                        tempEvent.Currency = (string)row[12];
 
                         temp.Add(tempEvent);
                     }
@@ -131,12 +134,19 @@ namespace TravelerWebService
                 {
 
                     SqlConn.Open();
-                    SqlCommand sqlCmd = new SqlCommand("IF EXISTS(SELECT top 1 Id FROM Events) Insert Into Events Values (((select top 1 Id from Events order by Id desc)+1),@userId,@name,'',@type,'','','','',@img,@date,20) Else Insert Into Events Values (0,@userId,@name,'',@type,'','','','',@img,@date,20) ", SqlConn);
+                    SqlCommand sqlCmd = new SqlCommand("IF EXISTS(SELECT top 1 Id FROM Events) Insert Into Events Values (((select top 1 Id from Events order by Id desc)+1),@userId,@name,@description,@type,@country,@state,@city,@site,@img,@date,@price,@currency) Else Insert Into Events Values (0,@userId,@name,@description,@type,@country,@state,@city,@site,@img,@date,@price,@currency) ", SqlConn);
                     sqlCmd.Parameters.Add("@name", SqlDbType.NVarChar, 50).Value = post.Name;
+                    sqlCmd.Parameters.Add("@description", SqlDbType.NVarChar, 50).Value = post.Description;
                     sqlCmd.Parameters.Add("@userId", SqlDbType.UniqueIdentifier).Value = post.UserId;
                     sqlCmd.Parameters.Add("@type", SqlDbType.Int).Value = Convert.ToInt32(post.Type);
-                    sqlCmd.Parameters.Add("@date", SqlDbType.DateTime).Value = Convert.ToDateTime(post.Date);
+                    sqlCmd.Parameters.Add("@country", SqlDbType.NVarChar, 50).Value = post.Country;
+                    sqlCmd.Parameters.Add("@state", SqlDbType.NVarChar, 50).Value = post.State;
+                    sqlCmd.Parameters.Add("@city", SqlDbType.NVarChar, 50).Value = post.City;
+                    sqlCmd.Parameters.Add("@site", SqlDbType.NVarChar, 50).Value = post.Site;
+                    sqlCmd.Parameters.Add("@date", SqlDbType.DateTime).Value = DateTime.ParseExact(post.Date,"dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture);
                     sqlCmd.Parameters.Add("@img", SqlDbType.VarBinary).Value = Convert.FromBase64String(post.Image.Remove(0,post.Image.IndexOf(',') + 1));
+                    sqlCmd.Parameters.Add("@price", SqlDbType.Money).Value = Convert.ToDecimal(post.Price);
+                    sqlCmd.Parameters.Add("@currency", SqlDbType.NVarChar,2).Value = post.Currency;
                     sqlCmd.ExecuteNonQuery();
 
                     SqlConn.Close();
@@ -231,6 +241,128 @@ namespace TravelerWebService
             }
         }
 
+        [WebInvoke(Method = "GET",
+                    ResponseFormat = WebMessageFormat.Json,
+                    UriTemplate = "countries")]
+        public List<Countries> GetCountries()
+        {
+            try
+            {
+                using (SqlConnection SqlConn = new SqlConnection(conn))
+                {
+                    SqlCommand sqlCmd = new SqlCommand("Select name From Countries order by Name", SqlConn);
+                    DataSet ds = new DataSet();
+                    using (SqlDataAdapter da = new SqlDataAdapter(sqlCmd))
+                    {
+                        da.Fill(ds, "Countries");
+                    }
+
+                    var temp = new List<Countries>();
+                    Countries tempCountry;
+
+
+                    foreach (DataRow row in ds.Tables[0].Rows)
+                    {
+
+                        tempCountry = new Countries();
+                        tempCountry.Name = (string)row[0];
+
+
+                        temp.Add(tempCountry);
+                    }
+
+
+                    return temp;
+                }
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+
+        [WebInvoke(Method = "GET",
+                   ResponseFormat = WebMessageFormat.Json,
+                   UriTemplate = "states/{name}")]
+        public List<States> GetStates(string name)
+        {
+            try
+            {
+                using (SqlConnection SqlConn = new SqlConnection(conn))
+                {
+                    SqlCommand sqlCmd = new SqlCommand("Select States.name From States Join Countries on States.country_id = Countries.id  Where Countries.Name = @name order by States.Name", SqlConn);
+                    sqlCmd.Parameters.Add("@name", SqlDbType.NVarChar, 50).Value = name;
+                    DataSet ds = new DataSet();
+                    using (SqlDataAdapter da = new SqlDataAdapter(sqlCmd))
+                    {
+                        da.Fill(ds, "States");
+                    }
+
+                    var temp = new List<States>();
+                    States tempCountry;
+
+
+                    foreach (DataRow row in ds.Tables[0].Rows)
+                    {
+
+                        tempCountry = new States();
+                        tempCountry.Name = (string)row[0];
+
+
+                        temp.Add(tempCountry);
+                    }
+
+
+                    return temp;
+                }
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+
+        [WebInvoke(Method = "GET",
+                  ResponseFormat = WebMessageFormat.Json,
+                  UriTemplate = "cities/{name}")]
+        public List<Cities> GetCities(string name)
+        {
+            try
+            {
+                using (SqlConnection SqlConn = new SqlConnection(conn))
+                {
+                    SqlCommand sqlCmd = new SqlCommand("Select Cities.name From Cities Join States on Cities.state_id = States.id  Where States.Name = @name order by Cities.Name", SqlConn);
+                    sqlCmd.Parameters.Add("@name", SqlDbType.NVarChar, 50).Value = name;
+                    DataSet ds = new DataSet();
+                    using (SqlDataAdapter da = new SqlDataAdapter(sqlCmd))
+                    {
+                        da.Fill(ds, "Cities");
+                    }
+
+                    var temp = new List<Cities>();
+                    Cities tempCountry;
+
+
+                    foreach (DataRow row in ds.Tables[0].Rows)
+                    {
+
+                        tempCountry = new Cities();
+                        tempCountry.Name = (string)row[0];
+
+
+                        temp.Add(tempCountry);
+                    }
+
+
+                    return temp;
+                }
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+
         [DataContract]
         public class Events
         {
@@ -258,6 +390,8 @@ namespace TravelerWebService
             public DateTime Date { get; set; }
             [DataMember(Order = 11)]
             public decimal Price { get; set; }
+            [DataMember(Order = 12)]
+            public string Currency { get; set; }
         }
 
         [DataContract]
@@ -268,12 +402,24 @@ namespace TravelerWebService
             [DataMember(Order = 1)]
             public string Description { get; set; }
             [DataMember(Order = 2)]
-            public Int16 Type { get; set; }            
+            public Int16 Type { get; set; }
             [DataMember(Order = 3)]
-            public string Date { get; set; }
+            public string Price { get; set; }
             [DataMember(Order = 4)]
-            public string Image { get; set; }
+            public string Currency { get; set; }
             [DataMember(Order = 5)]
+            public string Country { get; set; }
+            [DataMember(Order = 6)]
+            public string State { get; set; }
+            [DataMember(Order = 7)]
+            public string City { get; set; }
+            [DataMember(Order = 8)]
+            public string Site { get; set; }
+            [DataMember(Order = 9)]
+            public string Date { get; set; }
+            [DataMember(Order = 10)]
+            public string Image { get; set; }
+            [DataMember(Order = 11)]
             public Guid UserId { get; set; }
 
         }
@@ -285,6 +431,27 @@ namespace TravelerWebService
             public string Email { get; set; }
             [DataMember(Order = 1)]
             public string Password { get; set; }
+        }
+
+        [DataContract]
+        public class Countries
+        {
+            [DataMember(Order = 0)]
+            public string Name { get; set; }
+        }
+
+        [DataContract]
+        public class States
+        {
+            [DataMember(Order = 0)]
+            public string Name { get; set; }
+        }
+
+        [DataContract]
+        public class Cities
+        {
+            [DataMember(Order = 0)]
+            public string Name { get; set; }
         }
 
     }
