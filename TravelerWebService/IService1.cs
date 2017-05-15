@@ -16,7 +16,10 @@ namespace TravelerWebService
     {
 
         [OperationContract]
-        List<Events> GetEvents(string Country, string State, string City);
+        List<Events> GetEvents(string Country, string State, string City, string id);
+
+        [OperationContract]
+        List<Events> SearchEvents(string Country, string State, string City, string id, string types, string find);
 
         [OperationContract]
         List<Events> GetMyEvents(string userId);
