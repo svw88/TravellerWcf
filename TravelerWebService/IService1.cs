@@ -19,6 +19,9 @@ namespace TravelerWebService
         List<Events> GetEvents(string Country, string State, string City, string id);
 
         [OperationContract]
+        List<Events> GetUserEvents(string alias, string id);
+
+        [OperationContract]
         List<Events> SearchEvents(string Country, string State, string City, string id, string types, string find);
 
         [OperationContract]
@@ -26,6 +29,9 @@ namespace TravelerWebService
 
         [OperationContract]
         bool CreateEvent(Event post);
+
+        [OperationContract]
+        bool RemoveEvent(string eventId);
 
         [OperationContract]
         bool Register(User post);
