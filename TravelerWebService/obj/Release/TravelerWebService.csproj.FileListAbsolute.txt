@@ -1,0 +1,15 @@
+C:\Visual Studio Projects\TravelerWebService\TravellerWcf\TravelerWebService\bin\TravelerWebService.dll.config
+C:\Visual Studio Projects\TravelerWebService\TravellerWcf\TravelerWebService\bin\TravelerWebService.dll
+C:\Visual Studio Projects\TravelerWebService\TravellerWcf\TravelerWebService\bin\TravelerWebService.pdb
+C:\Visual Studio Projects\TravelerWebService\TravellerWcf\TravelerWebService\bin\Newtonsoft.Json.dll
+C:\Visual Studio Projects\TravelerWebService\TravellerWcf\TravelerWebService\bin\System.Net.Http.Formatting.dll
+C:\Visual Studio Projects\TravelerWebService\TravellerWcf\TravelerWebService\bin\System.Web.Cors.dll
+C:\Visual Studio Projects\TravelerWebService\TravellerWcf\TravelerWebService\bin\System.Web.Http.Cors.dll
+C:\Visual Studio Projects\TravelerWebService\TravellerWcf\TravelerWebService\bin\System.Web.Http.dll
+C:\Visual Studio Projects\TravelerWebService\TravellerWcf\TravelerWebService\bin\Newtonsoft.Json.xml
+C:\Visual Studio Projects\TravelerWebService\TravellerWcf\TravelerWebService\bin\System.Net.Http.Formatting.xml
+C:\Visual Studio Projects\TravelerWebService\TravellerWcf\TravelerWebService\bin\System.Web.Http.xml
+C:\Visual Studio Projects\TravelerWebService\TravellerWcf\TravelerWebService\bin\System.Web.Http.Cors.xml
+C:\Visual Studio Projects\TravelerWebService\TravellerWcf\TravelerWebService\obj\Release\TravelerWebService.csprojResolveAssemblyReference.cache
+C:\Visual Studio Projects\TravelerWebService\TravellerWcf\TravelerWebService\obj\Release\TravelerWebService.dll
+C:\Visual Studio Projects\TravelerWebService\TravellerWcf\TravelerWebService\obj\Release\TravelerWebService.pdb
